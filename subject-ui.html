@@ -1,0 +1,241 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-menu/paper-menu.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="../paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="./subject-data.html">
+
+<dom-module id="subject-ui">
+    <style>
+        .container {
+            font-family: 'Roboto Regular', sans-serif;
+            height: 40%;
+            width: 40%;
+            background-color: white;
+        }
+
+        paper-checkbox {
+            display: block;
+            margin-bottom: 40px;
+        }
+
+        paper-button.blue {
+        }
+
+            paper-button.blue:hover {
+                background: var(--paper-light-blue-50);
+            }
+
+        div.divtest1 {
+            @apply(--layout-horizontal);
+            @apply(--layout-justified);
+        }
+
+        iron-icon {
+            float: right;
+        }
+
+        paper-item {
+            @apply(--layout-horizontal);
+            @apply(--layout-justified);
+        }
+
+        paper-icon-button.blue {
+            color: var(--paper-light-blue-500);
+        }
+
+        paper-icon-button.red {
+            color: var(--paper-red-500);
+        }
+
+        paper-icon-button.orange {
+            color: var(--paper-orange-500);
+        }
+
+        paper-icon-button.green {
+            color: var(--paper-green-500);
+        }
+    </style>
+ <template>
+  
+<!-- uiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiui -->
+    <div id="serchsubject" class="container" style="float: left;">
+             <paper-input id="Searchip"  label="Search" value="{{textchange::input}}" ></paper-input>
+        
+                <paper-radio-group id="rdg" selected="SubjectName" on-change="radiosearch">
+                    <paper-radio-button name="SubjectName">ชื่อวิชา</paper-radio-button>
+                    <paper-radio-button name="KnowledgeCat">กลุ่มสาระการเรียนรู้</paper-radio-button>
+                </paper-radio-group>
+   
+
+             <br>
+
+              <div class="divtest1">
+                  <div>
+                      <paper-button tabindex="0" class="blue" on-click="previousClick" raised>ก่อนหน้า
+                        </paper-button>
+                  </div>
+                    <div><span>หน้าที่ </span><span>{{PageIndex}}</span><span>/</span><span>{{PageAll}}</span></div>
+                  <div>    
+                        <paper-button tabindex="0" class="blue" on-click="nextClick" raised>ถัดไป
+                        </paper-button>
+                   </div>
+              </div>
+        
+        
+                <div id="result" >&nbsp;&nbsp;Found <span>{{result.CountS}}</span> documents</div>
+			   <paper-menu id="ssmenu">
+					<template is="dom-repeat" items="{{result}}">
+								   <paper-item  raised>
+									   <div>{{_objtostr(item)}}</div>
+										<div>
+											<paper-icon-button class="orange" icon="create" 
+                                                               on-click="_handleEdit" item-icon >
+											</paper-icon-button>
+											 <paper-icon-button class="red" icon="delete" 
+                                                                on-click="_handleDelete" item-icon >
+											</paper-icon-button>
+										</div>
+									</paper-item>
+					</template>
+			   </paper-menu>
+	   
+             <paper-button tabindex="0" class="blue" on-click="chosesubject" raised>เลือกวิชา</paper-button>
+
+    </div>
+<!-- uiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiuiui -->   
+     
+            <!--
+			url ตามตารางที่ต้องการ
+			textfilter ค่าที่ต้องการค้นหา
+			typesearchห ประเภทที่ต้องการค้นหา เช่น 
+			ชื่อวิชา  ="FirstName"
+			สาระการเรียนรู้ ="LastName"
+            -->
+<!-- queryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryquer -->   
+        <subject-data id = "getdata" url="http://localhost:3000/api/Subjects" 
+                            textsearch="" limit="10" 
+                            typesearch="" on-subject-data-success="_receivedata" 
+                            >       
+        </subject-data>
+<!-- queryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryquery --> 
+ </template>
+</dom-module>
+
+
+<script>
+    Polymer({
+        is: 'subject-ui',
+        properties: {
+            result: {
+                type: Object,
+                //observer: '_queryValueChanged'
+            },
+            textchange: {
+                type: String,
+                observer: 'writersearch'
+            },
+            PageIndex: {
+                type: String
+            }
+            ,
+            PageAll: {
+                type: String
+            }
+        },
+        _objtostr: function (result) {
+            return 'วิชา ' +result.Name + ' ประเภท ' + result.Type
+                + ' กลุ่มสาระการเรียนรู้ ' + result.KnowledgeCat ;
+        },
+        chosesubject: function (e) {
+				//console.log(this.result[this.$.ssmenu.selected])
+            if(this.result[this.$.ssmenu.selected]== undefined)
+            {
+				var response={};
+				response['event'] = "notchose";
+                this.fire('subject-ui-success',response);
+            }
+            else
+            {
+				var response = this.result[this.$.ssmenu.selected];
+				response['event'] = "chosesubject";
+                this.fire('subject-ui-success',response);
+            }
+        },
+        writersearch: function () {
+            this.$.getdata.textsearch = this.$.Searchip.value;
+            this.$.getdata.typesearch = this.$.rdg.selected;
+            //this.$.getdata.limit = '10';
+            this.$.getdata.page_index = 1;
+            this.$.getdata.query_text.skip = 0;
+            this.$.getdata._queryValueChanged();
+        },
+        radiosearch: function (e) {
+            this.$.getdata.textsearch = this.$.Searchip.value;
+            this.$.getdata.typesearch = e.target.getAttribute('name');
+            this.$.getdata.page_index = 1;
+            this.$.getdata.query_text.skip = 0;
+            this.$.getdata._queryValueChanged();
+        },
+        ready: function () {
+            this.writersearch();
+        }
+        , _receivedata: function (e) {
+		
+			if(e.detail.event == "search")
+			{
+				            if (e.detail.CountS != 0) {
+								this.PageAll = Math.ceil(e.detail.CountS / 10);
+							}
+							else {
+								this.PageAll = 1;
+							}
+							this.PageIndex = e.detail.Pageindex;
+							this.fire('subject-ui-success', e.detail);
+							this.result = e.detail;
+				
+			}
+			else if(e.detail.event == "delete")
+			{
+							alert('ลบวิชาเรียบร้อยแล้ว');
+							var response = {};
+							response['event'] = "delete";
+							this.fire('subject-ui-success',response);
+							this.writersearch();
+
+			}
+			
+			
+			
+
+           // console.log(e.detail);
+        },
+        previousClick: function () {
+            this.$.getdata.previousClick();
+        },
+        nextClick: function () {
+            this.$.getdata.nextClick();
+        },
+        _handleDelete: function (e) {
+		
+          if (confirm('จะลบวิชานี้ไหม\n' + 'ชื่อวิชา : ' + e.model.__data__.item.Name
+                        + '\nกลุ่มสาระวิชาการเรียนรู้ : ' + e.model.__data__.item.KnowledgeCat)) 
+			{
+                this.$.getdata._queryDelete(e.model.__data__.item.id);
+            } else 
+            {
+                // Do nothing!
+            }
+
+            //เก็ทไอดีมาลบ
+        }
+
+    });
+</script>

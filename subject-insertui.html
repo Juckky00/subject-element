@@ -1,0 +1,108 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-button/paper-button.html">
+
+<dom-module id="subject-insertui">
+    <style>
+        .container {
+            @apply(--layout-fullbleed-vertical);
+            font-family: 'Roboto Regular', sans-serif;
+            height: 100%;
+            width: 800px;
+            background-color: white;
+        }
+
+        .container2 {
+            @apply(--layout-fullbleed-vertical);
+            font-family: 'Roboto Regular', sans-serif;
+            height: 100%;
+            width: 500px;
+            background-color: white;
+            margin-left: 10px;
+        }
+
+        paper-checkbox {
+            display: block;
+            margin-bottom: 40px;
+        }
+
+        paper-button.blue {
+        }
+
+            paper-button.blue:hover {
+                background: var(--paper-light-blue-50);
+            }
+    </style>
+ <template>
+     
+
+        <subject-data id = "insertdata" url="http://localhost:3000/api/Subjects" 
+                            textsearch="" limit="10" 
+                            typesearch="" on-datafromquery="_receivedata" method ="INSERT" 
+                      on-subject-data-success="_insertsuccess">       
+        </subject-data>
+
+     
+    <div class="container2" style="float: left;">
+
+         <paper-input id="snameip"  label="ชื่อวิขา"  ></paper-input>
+         <paper-input id="stypeip"  label="ประเภทวิชา" ></paper-input>
+         <paper-input id="knowledgecatip"  label="กลุ่มสาระการเรียนรู้" ></paper-input>
+         <paper-input id="curriculumip"  label="หลักสูตร" ></paper-input>
+         <paper-input id="codeip"  label="รหัสวิชา" ></paper-input>
+         <paper-input id="hourip"  label="จำนวนชั่วโมงที่สอน" ></paper-input>
+         <paper-input id="weightip"  label="จำนวนหน่วยกิต" ></paper-input>
+         
+         <!-- <paper-input id="idip"  label="id" readonly="true"></paper-input> -->
+         <paper-button tabindex="0" class="blue" on-click="_handleinsert" raised>เพิ่มวิชา</paper-button>
+     
+    </div>
+ </template>
+</dom-module>
+
+
+<script>
+    Polymer({
+        is: 'subject-insertui'
+        ,
+        properties: {
+            query: {
+                type: String,
+                //observer: '_queryValueChanged'
+            }, queryf: {
+                type: String,
+
+            }, queryl: {
+                type: String,
+
+            }
+        },
+        _handleinsert: function (e) {
+
+            this.$.insertdata.sname = this.$.snameip.value;
+            this.$.insertdata.stype = this.$.stypeip.value;
+            this.$.insertdata.knowledgecat = this.$.knowledgecatip.value;
+            this.$.insertdata.curriculum = this.$.curriculumip.value;
+            this.$.insertdata.code = this.$.codeip.value;
+            this.$.insertdata.hour = this.$.hourip.value;
+            this.$.insertdata.weight = this.$.weightip.value;
+            //this.$.insertdata.id = this.$.idip.value;
+            
+            this.$.insertdata._queryInsert();
+      
+        },
+        _insertsuccess: function (e) {
+					if(e.detail.event == "save")
+						{
+							this.fire('subject-insertui-success',e.detail);
+
+							console.log('เพิ่มวิชาเรียบร้อยแล้ว');
+							
+						}
+				
+            
+      
+        }
+
+    });
+</script>

@@ -1,0 +1,226 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+
+<dom-module id="subject-data">
+
+  <style>
+      :host {
+          display: block;
+          box-sizing: border-box;
+      }
+
+      .author img {
+          float: left;
+          margin-right: 5px;
+          max-height: 100px;
+          max-width: 100px;
+      }
+  </style>
+
+  <template url="{{url}}" textfilter={{textfilter}} type={{type}} >
+
+      
+  <iron-ajax id="subject_count"
+        last-response="{{count}}"
+        handleAs="json"
+        on-response="querySubject">
+  </iron-ajax>
+
+  <iron-ajax id="ajax"
+        last-response="{{people}}"
+        handleAs="json"
+        on-response="firedata">
+  </iron-ajax>
+      
+    <iron-ajax method="DELETE" id="delete" 
+          handle-as="json"
+          on-response="_successdelete">
+    </iron-ajax>
+
+    <iron-ajax method="POST" id="insertplz" 
+          handle-as="json"
+          content-type="application/json" 
+          on-response="_successinsert">
+    </iron-ajax>
+        
+    <iron-ajax method="PUT" id="updateplz" 
+          handle-as="json"
+          content-type="application/json" 
+          on-response="_successupdate">
+    </iron-ajax>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+    Polymer({
+
+        is: 'subject-data',
+        page_index: 1,
+        query_text: {
+            limit: 10,
+            skip: 0,
+            fields: [],
+            where: {}
+        },
+
+        properties: {
+            url: {
+                type: String
+            }, HostID: {
+                type: String,
+				value:""
+            }, sname: {
+                type: String,
+				value:""
+            }, stype: {
+                type: String,
+				value:""
+            }, knowledgecat: {
+                type: String,
+				value:""
+            }, curriculum: {
+                type: String,
+				value:""
+            }, code: {
+                type: String,
+				value:""
+            }, hour: {
+                type: String,
+				value:""
+            }, weight: {
+                type: String,
+				value:""
+            }, id: {
+                type: String,
+				value:""
+            }, textsearch: {
+                type: String,
+            }, typesearch: {
+                type: String,
+            }, limit: {
+                type: String,
+            }, skip: {
+                type: String,
+            }, resultfound: {
+                type: String,
+            }
+        },
+        ready: function () {
+		    //console.log(this.HostID);
+			//console.log(this.url)
+			//console.log(this.textsearch)
+			//console.log(this.typesearch)
+			//this._queryValueChanged()
+        },
+        _queryValueChanged: function () {
+     
+            this.query_text.limit=this.limit;
+         
+                      if (this.typesearch == 'SubjectName') {
+                    
+                            this.query_text.fields= ['Name', 'Type', 'KnowledgeCat'
+                                                     ,'Curriculum','Code','Hour','Weight', 'id'];
+                            this.query_text.where = {"Name": { "like": this.textsearch }};
+                            this.$.subject_count.url = this.url+"/count?where=" +
+                            JSON.stringify(this.query_text.where);
+                            this.$.subject_count.generateRequest();
+                        }
+                        else if (this.typesearch == 'KnowledgeCat') {
+                            this.query_text.where = {"KnowledgeCat": { "like": this.textsearch }};
+                            this.query_text.fields= ['Name', 'Type', 'KnowledgeCat'
+                                                     ,'Curriculum','Code','Hour','Weight', 'id'];
+                            this.$.subject_count.url = this.url+"/count?where=" +
+                            JSON.stringify(this.query_text.where);
+                            this.$.subject_count.generateRequest();
+                        }
+                       
+        },
+        _queryInsert: function () {
+                            this.$.insertplz.url = this.url;
+                            this.$.insertplz.body = JSON.stringify({
+                                "Name": this.sname,"Type": this.stype,"KnowledgeCat":this.knowledgecat,
+                                "Curriculum":this.curriculum,"Code":this.code, 
+                                "Hour":this.hour,"Weight":this.weight
+                            });
+
+                            this.$.insertplz.generateRequest();
+        },
+        _queryUpdate: function () {
+     
+                            this.$.updateplz.url = this.url;
+                            this.$.updateplz.body = JSON.stringify({
+                                "Name":this.sname,"Type":this.stype,"KnowledgeCat":this.knowledgecat
+                                ,"Curriculum":this.curriculum,"Code":this.code, 
+                                "Hour":this.hour,"Weight":this.weight,"id":this.id
+                            });
+
+                            this.$.updateplz.generateRequest();
+        },
+        _queryDelete: function (ID) {
+                        this.$.delete.url = this.url+"/" + ID;
+                        this.$.delete.generateRequest();
+        },
+        querySubject: function () {
+                this.$.ajax.url = this.url+"?filter=" + JSON.stringify(this.query_text);
+                this.$.ajax.generateRequest();
+        },
+        firedata: function () {
+            
+                this.resultfound = this.$.subject_count.lastResponse.count;
+                this.result = this.$.ajax.lastResponse;
+                this.result["CountS"]=this.$.subject_count.lastResponse.count;
+                this.result["Pageindex"]= this.page_index;
+				this.result["event"]= 'search';
+				
+				
+               // console.log(this.result.length);
+               // console.log(this.result);
+
+                this.fire('subject-data-success',   this.result);
+           
+
+        },
+        previousClick: function () {
+            
+                if (this.page_index > 1) 
+                {
+                    this.query_text.skip -= 10;;
+                    this.page_index--;
+                    this.querySubject();
+                }
+        },
+        nextClick: function () {
+                if (this.resultfound - 10 > this.query_text.skip) 
+                {
+                    // do query next
+                    this.query_text.skip += 10;
+                    this.page_index++;
+                    this.querySubject();
+                }
+        },
+        _successinsert: function () {
+				var response = this.$.insertplz.lastResponse;
+				response['event'] = "save";
+ 
+                this.fire('subject-data-success', response);
+        },
+        _successdelete: function () {
+		
+                var response = {};
+				response['event'] = "delete";
+ 
+                this.fire('subject-data-success', response);
+        },
+        _successupdate: function () {
+				var response = {};
+				response['event'] = "update";
+ 
+                this.fire('subject-data-success', response);
+             
+        }
+    });
+
+</script>
